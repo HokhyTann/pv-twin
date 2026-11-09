@@ -1,0 +1,24 @@
+name: pv
+
+services:
+  db:
+    # Postgres 17 with TimescaleDB + PostGIS preinstalled
+    image: timescale/timescaledb-ha:pg17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-pv}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pv}
+      POSTGRES_DB: ${POSTGRES_DB:-pv}
+      TZ: Asia/Phnom_Penh
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/home/postgres/pgdata
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pv} -d ${POSTGRES_DB:-pv}"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  pgdata:

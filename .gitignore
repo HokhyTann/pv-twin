@@ -1,0 +1,19 @@
+.env
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+backend/artifacts/
+
+# Node
+node_modules/
+dist/
+*.local
+
+# Source data stays local
+data/source/*.csv
+.claude/settings.local.json
