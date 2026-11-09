@@ -34,7 +34,7 @@ def run(
     dsn = dsn or get_settings().dsn
     selected = [layer for layer in LAYERS if not layers or layer in layers]
     done: dict[str, int] = {}
-    with psycopg.connect(dsn) as conn:
+    with psycopg.connect(dsn, autocommit=True) as conn:
         for layer in selected:
             files = layer_files(layer, sql_dir)
             if not files:

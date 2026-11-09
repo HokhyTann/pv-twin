@@ -116,7 +116,7 @@ def run(
     dsn = dsn or get_settings().dsn
     selected = {k: v for k, v in SOURCES.items() if not names or k in names or v in names}
     results = []
-    with psycopg.connect(dsn) as conn:
+    with psycopg.connect(dsn, autocommit=True) as conn:
         for file_name, table in selected.items():
             path = data_dir / file_name
             if not path.exists():

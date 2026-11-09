@@ -180,7 +180,7 @@ core.cable (
 ```
 
 The electrical tree is **site → substation → meter → MV transformer → inverter → combiner box →
-string → panel table**. The SLD and every drill-down come from `parent_id`. For deep queries use
+panel table → string** (a table carries two strings, one per module row; as built in Phase 2). The SLD and every drill-down come from `parent_id`. For deep queries use
 a recursive CTE, or a `path ltree` column if that turns out easier.
 
 ### 5.4 Telemetry (clean schema, Timescale hypertables)

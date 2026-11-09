@@ -17,3 +17,4 @@ dist/
 # Source data stays local
 data/source/*.csv
 .claude/settings.local.json
+data/preview/

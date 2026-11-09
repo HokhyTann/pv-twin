@@ -2,7 +2,7 @@ SHELL := /bin/bash
 ASSESSMENT_DATA ?= $(HOME)/Desktop/FAI_Engineer_Assessment_Candidate_Pack/data
 
 .PHONY: help env install up down reset psql migrate revision api web data health \
-	ingest transform pipeline dq test lint
+	ingest transform layout layout-preview pipeline dq test lint
 
 help:            ## List targets
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-10s %s\n", $$1, $$2}'
@@ -42,7 +42,14 @@ ingest:          ## Load CSVs into raw.* (skips unchanged files; f=--force to re
 transform:       ## Rebuild core + clean (+ mart) from raw
 	cd backend && uv run python -m jobs.transform
 
-pipeline: migrate ingest transform  ## migrate -> ingest -> transform
+layout:          ## Generate synthetic plant layouts (assets, cables, features) for all sites
+	cd backend && uv run python -m jobs.layout_gen $(sites)
+
+layout-preview:  ## Render layouts to data/preview/*.html (open index.html in a browser)
+	cd backend && uv run python -m jobs.layout_preview $(sites)
+	@echo "open data/preview/index.html"
+
+pipeline: migrate ingest transform layout  ## migrate -> ingest -> transform -> layout
 
 dq:              ## Show the data-quality issue log
 	@docker compose exec -T db psql -U pv -d pv -c "select source_table, rule, severity, \
