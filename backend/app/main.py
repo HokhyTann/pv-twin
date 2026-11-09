@@ -1,8 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 
 from app.config import get_settings
-from app.routers import health
+from app.routers import assets, health, sites
 
 app = FastAPI(title="PV Digital Twin API", version="0.1.0")
 
@@ -13,4 +14,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(health.router, prefix="/api/v1")
+# Layout payloads are large and repetitive JSON (~5-10x smaller gzipped).
+app.add_middleware(GZipMiddleware, minimum_size=1024)
+
+for r in (health.router, sites.router, assets.router):
+    app.include_router(r, prefix="/api/v1")

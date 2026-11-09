@@ -237,6 +237,13 @@ def run(
         for site_id, code, kwp in sites:
             with conn.transaction():
                 specs, extra = resolve_inverters(conn, site_id, kwp, p)
+                has_meter = conn.execute(
+                    "select exists (select 1 from core.asset where site_id = %s"
+                    " and code = 'MTR-01')",
+                    (site_id,),
+                ).fetchone()[0]
+                if not has_meter:  # no meter in the source data: synthetic one
+                    extra["MTR-01"] = {"generated": True}
                 layout = plan_site(specs, p)
                 write_site(conn, site_id, layout, extra)
                 total_kwp = round(sum(s.dc_kwp for s in specs), 1)

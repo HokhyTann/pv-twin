@@ -127,12 +127,19 @@ def counts(conn: psycopg.Connection) -> tuple:
     ).fetchone()
 
 
+# Assets that come from source data (clean.* references them); generated ones may be
+# recreated with new ids. Works whether or not a layout already exists (test order).
+SOURCE_ASSETS = (
+    "select site_id || '/' || code, asset_id from core.asset"
+    " where asset_type in ('inverter', 'meter')"
+    "   and not coalesce((attrs ->> 'generated')::boolean, false)"
+)
+
+
 @pytest.fixture(scope="module")
 def laid_out(loaded_db: str) -> Iterator[tuple[str, dict, tuple]]:
     with psycopg.connect(loaded_db) as conn:
-        source_ids = dict(
-            conn.execute("select site_id || '/' || code, asset_id from core.asset").fetchall()
-        )
+        source_ids = dict(conn.execute(SOURCE_ASSETS).fetchall())
         clean_before = counts(conn)[3:]
     layout_gen.run(dsn=loaded_db)
     yield loaded_db, source_ids, clean_before
@@ -141,13 +148,9 @@ def laid_out(loaded_db: str) -> Iterator[tuple[str, dict, tuple]]:
 def test_source_assets_keep_ids_and_clean_data_survives(laid_out) -> None:
     dsn, source_ids, clean_before = laid_out
     with psycopg.connect(dsn) as conn:
-        now = dict(
-            conn.execute(
-                "select site_id || '/' || code, asset_id from core.asset"
-                " where site_id || '/' || code = any(%s)",
-                (list(source_ids),),
-            ).fetchall()
-        )
+        now = dict(conn.execute(SOURCE_ASSETS).fetchall())
+        # fixture: 2 fleet inverters + 3 PV-06 inverters + the PV-06 revenue meter
+        assert len(source_ids) == 6
         assert now == source_ids
         assert counts(conn)[3:] == clean_before
 

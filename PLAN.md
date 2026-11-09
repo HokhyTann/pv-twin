@@ -312,9 +312,11 @@ Use a fixed random seed so the layout is the same on every run.
 - **React Flow (@xyflow/react)**: single-line diagram, auto-laid-out with **elkjs**
 - **Apache ECharts** (`echarts-for-react`): all time-series charts
 - **TanStack Query**: data fetching and caching. **Zustand**: shared UI state
-- **TanStack Router** (or React Router): routing with type-safe search params
+- **TanStack Router** (or React Router): routing with type-safe search params. *Phase 3: React
+  Router v8, declarative mode.*
 - **Tailwind CSS + shadcn/ui**: panels, tables, controls
-- API types generated from FastAPI's OpenAPI spec (`openapi-typescript`)
+- API types generated from FastAPI's OpenAPI spec (`openapi-typescript`). *Phase 3: hand-written
+  in `src/api/types.ts` for now, because openapi-typescript 7 does not run on TypeScript 7.*
 
 ### 7.2 Shared state (Zustand)
 `selectedSiteId · selectedAssetId · hoveredAssetId · colourMetric · date / dateRange ·

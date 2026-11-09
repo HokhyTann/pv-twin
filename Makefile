@@ -56,11 +56,13 @@ dq:              ## Show the data-quality issue log
 	  source_row as line, entity, to_char(period_start at time zone 'Asia/Phnom_Penh', 'YYYY-MM-DD') as start, \
 	  n_rows, detail from clean.dq_issue order by source_table, severity, rule, source_row"
 
-test:            ## Run backend tests (needs `make up`; uses a throwaway pv_test DB)
+test:            ## Run backend tests (needs `make up`; throwaway pv_test DB) + frontend unit tests
 	cd backend && uv run pytest -q
+	cd frontend && pnpm test
 
-lint:            ## Ruff format + lint
+lint:            ## Backend: ruff format + lint. Frontend: oxlint + type check
 	cd backend && uv run ruff format . ../db/migrations && uv run ruff check --fix . ../db/migrations
+	cd frontend && pnpm lint && pnpm typecheck
 
 api:             ## Run FastAPI on :8000 with reload
 	cd backend && uv run uvicorn app.main:app --reload --port 8000
