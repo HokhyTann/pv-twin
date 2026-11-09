@@ -15,6 +15,11 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:5173"]
 
     @property
+    def dsn(self) -> str:
+        """Plain libpq URL for psycopg (SQLAlchemy's '+psycopg' driver suffix removed)."""
+        return self.database_url.replace("postgresql+psycopg://", "postgresql://", 1)
+
+    @property
     def data_path(self) -> Path:
         """DATA_DIR may be relative to backend/; resolve it to an absolute path."""
         p = self.data_dir

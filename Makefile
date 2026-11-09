@@ -1,7 +1,8 @@
 SHELL := /bin/bash
 ASSESSMENT_DATA ?= $(HOME)/Desktop/FAI_Engineer_Assessment_Candidate_Pack/data
 
-.PHONY: help env install up down reset psql migrate revision api web data health
+.PHONY: help env install up down reset psql migrate revision api web data health \
+	ingest transform pipeline dq test lint
 
 help:            ## List targets
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-10s %s\n", $$1, $$2}'
@@ -34,6 +35,25 @@ revision:        ## New migration: make revision m="message"
 data:            ## Copy assessment CSVs into data/source (source folder untouched)
 	cp -n $(ASSESSMENT_DATA)/*.csv data/source/ || true
 	@ls -1 data/source
+
+ingest:          ## Load CSVs into raw.* (skips unchanged files; f=--force to reload)
+	cd backend && uv run python -m jobs.ingest $(f)
+
+transform:       ## Rebuild core + clean (+ mart) from raw
+	cd backend && uv run python -m jobs.transform
+
+pipeline: migrate ingest transform  ## migrate -> ingest -> transform
+
+dq:              ## Show the data-quality issue log
+	@docker compose exec -T db psql -U pv -d pv -c "select source_table, rule, severity, \
+	  source_row as line, entity, to_char(period_start at time zone 'Asia/Phnom_Penh', 'YYYY-MM-DD') as start, \
+	  n_rows, detail from clean.dq_issue order by source_table, severity, rule, source_row"
+
+test:            ## Run backend tests (needs `make up`; uses a throwaway pv_test DB)
+	cd backend && uv run pytest -q
+
+lint:            ## Ruff format + lint
+	cd backend && uv run ruff format . ../db/migrations && uv run ruff check --fix . ../db/migrations
 
 api:             ## Run FastAPI on :8000 with reload
 	cd backend && uv run uvicorn app.main:app --reload --port 8000
